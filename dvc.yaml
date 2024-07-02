@@ -1,0 +1,40 @@
+stages:
+  preprocess:
+    cmd: python src/data_preprocessing.py --target "Class" --file "/Users/uditrawat/Desktop/RL/GAN-f/dataset/15_csv.csv" --output-dir data/processed
+    deps:
+      - src/data_preprocessing.py
+      - /Users/uditrawat/Desktop/RL/GAN-f/dataset/15_csv.csv
+    outs:
+      - data/processed/X_train.csv
+      - data/processed/X_test.csv
+      - data/processed/y_train.csv
+      - data/processed/y_test.csv
+      - data/processed/X_resampled.csv
+      - data/processed/y_resampled.csv
+
+  train_gan:
+    cmd: python src/gan_training.py --input-dir data/processed --output models/weights/gan.pth
+    deps:
+      - src/gan_training.py
+      - data/processed/X_train.csv
+      - data/processed/X_resampled.csv
+    outs:
+      - models/weights/gan.pth
+
+  augment_data:
+    cmd: python src/evaluation.py --input-dir data/processed --gan-model models/weights/gan.pth --output data/augmented_data.csv
+    deps:
+      - src/evaluation.py
+      - models/weights/gan.pth
+      - data/processed/X_train.csv
+      - data/processed/X_resampled.csv
+    outs:
+      - data/augmented_data.csv
+
+  train_xgboost:
+    cmd: python src/model_training.py --input data/augmented_data.csv --output results/metrics.csv
+    deps:
+      - src/model_training.py
+      - data/augmented_data.csv
+    outs:
+      - results/metrics.csv
