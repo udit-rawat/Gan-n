@@ -43,7 +43,7 @@ This project implements a Generative Adversarial Network (GAN) to generate synth
    - Install dependencies: `pip install -r requirements.txt`
 
 2. **Train the GAN**
-   - Run the main script: `python3 main.py`
+   - Run the main script: `dvc repro`, to track the chnages.
    - Specify the target column and data file path in the script.
 
 ### Example Usage
