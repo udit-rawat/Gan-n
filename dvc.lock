@@ -1,0 +1,109 @@
+schema: '2.0'
+stages:
+  preprocess:
+    cmd: python src/data_preprocessing.py --target "Class" --file "/Users/uditrawat/Desktop/RL/GAN-f/dataset/15_csv.csv"
+      --output-dir data/processed
+    deps:
+    - path: dataset/15_csv.csv
+      hash: md5
+      md5: a01230ca997e6ff549b59a3608a8a39c
+      size: 16006
+    - path: src/data_preprocessing.py
+      hash: md5
+      md5: 335c6dc83a96fadc99aa1a2f1fa332bf
+      size: 1928
+    outs:
+    - path: data/processed/X_resampled.csv
+      hash: md5
+      md5: 6cbd513a9d00a4b9988357713db9dfec
+      size: 39405
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 1c975ae1d4f5b23e40a47102e8d9c34d
+      size: 5289
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: fb6c51dfbb63bd3020d3f481d9c66cfd
+      size: 20708
+    - path: data/processed/y_resampled.csv
+      hash: md5
+      md5: db9cbb2b4240b325e4d68ce3cb37dc2d
+      size: 1404
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: fc90cbf716b95da7abb01a19e90b1ceb
+      size: 286
+    - path: data/processed/y_train.csv
+      hash: md5
+      md5: 53c28d5d1f5960f39c640948b3d8671a
+      size: 1124
+  train_gan:
+    cmd: python src/gan_training.py --input-dir data/processed --output models/generator.pkl
+    deps:
+    - path: data/processed/X_resampled.csv
+      hash: md5
+      md5: 6cbd513a9d00a4b9988357713db9dfec
+      size: 39405
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: fb6c51dfbb63bd3020d3f481d9c66cfd
+      size: 20708
+    - path: src/gan_training.py
+      hash: md5
+      md5: 169ba903e275b6fd639a716c9098b324
+      size: 3978
+    outs:
+    - path: models/generator.pkl
+      hash: md5
+      md5: 1b4d118327d3d83d7ead8563f77fe45a
+      size: 2805836
+  augment_data:
+    cmd: python src/augment_data.py --input-dir data/processed --output data/augmented
+      --generator-model models/generator.pkl
+    deps:
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: fb6c51dfbb63bd3020d3f481d9c66cfd
+      size: 20708
+    - path: data/processed/y_train.csv
+      hash: md5
+      md5: 53c28d5d1f5960f39c640948b3d8671a
+      size: 1124
+    - path: models/generator.pkl
+      hash: md5
+      md5: 1b4d118327d3d83d7ead8563f77fe45a
+      size: 2805836
+    - path: src/augment_data.py
+      hash: md5
+      md5: 9fde481ded6e1348b9b55cc55e07f324
+      size: 13944
+    outs:
+    - path: data/augmented/X_augmented.csv
+      hash: md5
+      md5: 29230d14daee352bd0d53371a699507e
+      size: 53701
+    - path: data/augmented/y_augmented.csv
+      hash: md5
+      md5: fd4cc8f8d73e3cd026bd6219e6b80c2d
+      size: 1510
+  train_xgboost:
+    cmd: python src/model_training.py --input data/augmented/X_augmented.csv --output
+      results/metrics.csv
+    deps:
+    - path: data/augmented/X_augmented.csv
+      hash: md5
+      md5: 29230d14daee352bd0d53371a699507e
+      size: 53701
+    - path: data/augmented/y_augmented.csv
+      hash: md5
+      md5: fd4cc8f8d73e3cd026bd6219e6b80c2d
+      size: 1510
+    - path: src/model_training.py
+      hash: md5
+      md5: 120a913b493607c24f48e603b1b98d78
+      size: 1364
+    outs:
+    - path: results/metrics.csv
+      hash: md5
+      md5: 2664e2598b17fe268524dfa8066bd00a
+      size: 357
