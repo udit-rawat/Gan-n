@@ -13,28 +13,30 @@ stages:
       - data/processed/y_resampled.csv
 
   train_gan:
-    cmd: python src/gan_training.py --input-dir data/processed --output models/weights/gan.pth
+    cmd: python src/gan_training.py --input-dir data/processed --output models/generator.pkl
     deps:
       - src/gan_training.py
       - data/processed/X_train.csv
       - data/processed/X_resampled.csv
     outs:
-      - models/weights/gan.pth
+      - models/generator.pkl
 
   augment_data:
-    cmd: python src/evaluation.py --input-dir data/processed --gan-model models/weights/gan.pth --output data/augmented_data.csv
+    cmd: python src/augment_data.py --input-dir data/processed --output data/augmented --generator-model models/generator.pkl
     deps:
-      - src/evaluation.py
-      - models/weights/gan.pth
+      - src/augment_data.py
       - data/processed/X_train.csv
-      - data/processed/X_resampled.csv
+      - data/processed/y_train.csv
+      - models/generator.pkl
     outs:
-      - data/augmented_data.csv
+      - data/augmented/X_augmented.csv
+      - data/augmented/y_augmented.csv
 
   train_xgboost:
-    cmd: python src/model_training.py --input data/augmented_data.csv --output results/metrics.csv
+    cmd: python src/model_training.py --input data/augmented/X_augmented.csv --output results/metrics.csv
     deps:
       - src/model_training.py
-      - data/augmented_data.csv
+      - data/augmented/X_augmented.csv
+      - data/augmented/y_augmented.csv
     outs:
       - results/metrics.csv
