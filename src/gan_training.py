@@ -1,15 +1,16 @@
-# src/gan_training.py
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-
+import pandas as pd
+import argparse
+import pickle
 
 latent_dim = 100
 
 
 class Generator(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, latent_dim):
         super(Generator, self).__init__()
         self.model = nn.Sequential(
             nn.Linear(latent_dim, 256),
@@ -46,7 +47,7 @@ class Discriminator(nn.Module):
 
 
 def train_gan(X_train_minority, X_smoteen_minority, input_dim, epochs=1000, batch_size=32):
-    generator = Generator(input_dim)
+    generator = Generator(input_dim, latent_dim)
     discriminator = Discriminator(input_dim)
 
     optimizer_G = optim.Adam(generator.parameters(), lr=0.0002)
@@ -87,15 +88,29 @@ def train_gan(X_train_minority, X_smoteen_minority, input_dim, epochs=1000, batc
             print(
                 f"{epoch} [D loss: {d_loss.item()}] [G loss: {g_loss.item()}]")
 
-        # Add logging to check shapes
-        if epoch % 10 == 0:
-            print(f"Epoch {epoch}")
-            print(f"Real samples shape: {real_samples.shape}")
-            print(f"Noise shape: {noise.shape}")
-            print(f"Synthetic samples shape: {synthetic_samples.shape}")
-            print(f"Real labels shape: {real_labels.shape}")
-            print(f"Synthetic labels shape: {synthetic_labels.shape}")
-
-    torch.save(generator.state_dict(), "models/weights/gan.pth")
-
     return generator
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-dir", type=str, required=True,
+                        help="Directory with preprocessed data")
+    parser.add_argument("--output", type=str, required=True,
+                        help="Path to save the generator model")
+    args = parser.parse_args()
+
+    X_train = pd.read_csv(f"{args.input_dir}/X_train.csv")
+    X_resampled = pd.read_csv(f"{args.input_dir}/X_resampled.csv")
+    y_train = pd.read_csv(f"{args.input_dir}/y_train.csv")
+    y_resampled = pd.read_csv(f"{args.input_dir}/y_resampled.csv")
+
+    minority_class = y_train['Class'].value_counts().idxmin()
+    X_train_minority = X_train[y_train['Class'] == minority_class]
+    X_smoteen_minority = X_resampled[y_resampled['Class'] == minority_class]
+
+    generator = train_gan(X_train_minority, X_smoteen_minority,
+                          input_dim=X_train.shape[1], epochs=1000, batch_size=32)
+
+    # Save the entire generator object
+    with open(args.output, 'wb') as f:
+        pickle.dump(generator, f)
