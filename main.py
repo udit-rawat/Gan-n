@@ -5,7 +5,7 @@ import numpy as np
 # Ensure this is correctly imported
 from src.data_preprocessing import load_and_preprocess_data
 from src.model_training import train_xgboost
-from src.evaluation import augment_data
+from src.augment_data import augment_data
 from src.gan_training import train_gan
 
 
